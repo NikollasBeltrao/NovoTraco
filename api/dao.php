@@ -54,15 +54,43 @@ function cadastrarPost()
         $query->execute();
         $lastID = $Conexao->lastInsertId();
         $imgs = json_decode($_POST['imgs']);
-        foreach ($imgs as $img) {
+        foreach ($imgs as $img) {  
+            $i = uploadImg($img);          
             $query2 = $Conexao->prepare("INSERT INTO img (texto, idpost) VALUES (:texto, :idpost)");
-            $query2->bindValue(":texto", $img);
+            $query2->bindValue(":texto", $i?$i:'');
             $query2->bindValue(':idpost', $lastID);
             $query2->execute();
         }
         echo json_encode('{"response": true}');
     } catch (Exception $e) {
         echo json_encode('{"err": "' . $e . '"}');
+    }
+}
+
+function uploadImg($data)
+{
+    if (preg_match('/^data:image\/(\w+);base64,/', $data, $type)) {
+        $data = substr($data, strpos($data, ',') + 1);
+        $type = strtolower($type[1]); // jpg, png, gif
+
+        if (!in_array($type, ['jpg', 'jpeg', 'gif', 'png'])) {
+            throw new \Exception('invalid image type');
+        }
+        $data = str_replace(' ', '+', $data);
+        $data = base64_decode($data);
+
+        if ($data === false) {
+            throw new \Exception('base64_decode failed');
+        }
+    } else {
+        throw new \Exception('did not match data URI with image data');
+    }
+    $file = "imagens/" . uniqid() . ".{$type}";
+    $sucess = file_put_contents($file, $data);
+    if ($sucess == false) {
+        return $sucess;
+    } else {
+        return $file;
     }
 }
 

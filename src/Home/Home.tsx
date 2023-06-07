@@ -38,7 +38,7 @@ const Home: React.FC = () => {
     }
 
     function irParaPost(id: number) {
-        history.push("/post", {idpost: id})
+        history.push("/post", { idpost: id })
     }
 
     useEffect(() => {
@@ -47,18 +47,29 @@ const Home: React.FC = () => {
     return (
         <>
             <nav className='nav'> Novo Traço</nav>
-            <div className="home-container">                    
-                {posts.map((el) => {
-                    return <div className="card card-home" key={el.idpost} onClick={() => irParaPost(parseInt(el.idpost))}>
-                        <img src={el.texto} className="card-img-top" alt="..." />
-                        <div className="card-body">
-                            <h5 className="card-title">{el.titulo}</h5>
-                            <small>{formData(el.datac)}</small>
-                            {/*<a href="#" className="btn btn-primary">Go somewhere</a>*/}
-                        </div>
+            <div className="home-container">
+                <div id="carouselExampleControls" className="carousel slide" data-ride="carousel">
+                    <div className="carousel-inner">
+                        {posts.map((el, i) => {
+                            return <div className={"carousel-item "+(i==0?"active":'')} key={el.idpost} onClick={() => irParaPost(parseInt(el.idpost))}>
+                                <img src={"http://localhost/novotraco/api/"+el.texto} className="card-img-top" alt="..." />
+                                <div className="carousel-title d-none d-md-block">
+                                    <h2>{el.titulo}</h2>
+                                    <small>{formData(el.datac)}</small>
+                                    {/*<a href="#" className="btn btn-primary">Go somewhere</a>*/}
+                                </div>
+                            </div>
+                        })}                    
                     </div>
-                })}
-                
+                    <a className="carousel-control-prev" href="#carouselExampleControls" role="button" data-slide="prev">
+                        <span className="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span className="sr-only">Previous</span>
+                    </a>
+                    <a className="carousel-control-next" href="#carouselExampleControls" role="button" data-slide="next">
+                        <span className="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span className="sr-only">Next</span>
+                    </a>
+                </div>
             </div>
         </>
     )

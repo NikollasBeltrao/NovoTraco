@@ -18,17 +18,15 @@ const NovoPost: React.FC = () => {
     function addImagem(event: ChangeEvent<HTMLInputElement>) {
 
         if (!event.target.files || !event.target.files[0]) return;
-
         const FR = new FileReader();
-
+        var res: any = '';
         FR.addEventListener("load", (evt) => {
             if (evt.target) {
-                setImgs([...imgs, (evt.target.result ? evt.target.result.toString() : '')]);
+                setImgs([...imgs, evt.target.result?.toString()]);
             }
         });
 
         FR.readAsDataURL(event.target.files[0]);
-
     }
     function removerImagem(index: number) {
         setImgs(imgs.filter((el, i) => {
@@ -79,6 +77,8 @@ const NovoPost: React.FC = () => {
         aux[event.target.name] = event.target.value;
         setPost(aux);
     }
+
+
     return (
         <>
             <nav className='nav'>Novo Traço</nav>
@@ -96,9 +96,9 @@ const NovoPost: React.FC = () => {
                     <br />
                     <div className="mb-12">
                         <label htmlFor="formFileSm" className="form-label label-file">adicionar imagem</label>
-                        <input type="file" onChange={addImagem} className="form-control" accept='image/*' id="formFileSm" name="img" />
+                        <input type="file" onChange={addImagem} className="form-control" multiple accept='image/*' id="formFileSm" name="img" />
                     </div>
-                    <button className="btn btn-primary" type='submit'>Cadastrar</button>                    
+                    <button className="btn btn-primary" type='submit'>Cadastrar</button>
                     <div className="lista-imgs">
                         {imgs.map((el, i) => {
                             return <div className="img-content" key={i}>

@@ -54,7 +54,7 @@ const Post: React.FC = () => {
             <div className="home-container">
                 {imgs.map((el, i) => {
                     return <div className="card card-post" key={i}>
-                        <img src={el.texto} className="card-img-top img-post" alt="..." />
+                        <img src={"http://localhost/novotraco/api/"+el.texto} className="card-img-top img-post" alt="..." />
                         {i === 0 ? <div className="card-body card-desc">
                             <p className="card-text">{post.descricao}</p>
                         </div> : ''}
