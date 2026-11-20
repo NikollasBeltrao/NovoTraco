@@ -4,9 +4,10 @@ Projeto de mural de publicações com imagens e descrições, desenvolvido com
 React, TypeScript, PHP e MySQL. Permite apresentar conteúdo em um espaço
 visual e cadastrar publicações pela interface administrativa.
 
-> Este repositório contém a versão original do projeto. Uma versão de
-> demonstração revisada está sendo preparada separadamente e ainda não foi
-> incorporada ao código disponível aqui.
+**[Acessar demonstração](https://nikollas-beltrao-projects.duckdns.org:8445/)**
+
+> Este repositório contém a versão original. A demonstração hospedada possui
+> melhorias que ainda não foram incorporadas ao código disponível aqui.
 
 ## Funcionalidades da versão original
 
