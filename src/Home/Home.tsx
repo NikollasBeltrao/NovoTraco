@@ -1,78 +1,36 @@
 import React, { useEffect, useState } from 'react';
-import "./Home.css";
+import { Link } from 'react-router-dom';
 import api from '../api';
-import { useHistory, useLocation } from 'react-router-dom';
+import { errorMessage, useAuth } from '../auth';
+import PostCard, { FeedPost } from '../Components/PostCard';
 
-const Home: React.FC = () => {
-    const location = useLocation();
-    const history = useHistory();
-    const [posts, setPosts] = useState(Array<{
-        idpost: '',
-        titulo: '',
-        datac: '',
-        texto: ''
-    }>());
-    const [imgs, setImgs] = useState(Array<{
-        idimg: '',
-        texto: '',
-        idpost: '',
-    }>());
-    async function listar() {
-        await api.get('/dao.php?listarPosts=listarPosts').then(res => {
-            if (res.data.length > 0) {
-                setPosts(res.data);
-            }
-        });
-    }
-    async function listarImagens(id: any) {
-        var a: any = location.state;
-        await api.get('/dao.php?listarImagens=listarImagens&idpost=' + id).then(res => {
-            if (res.data.length > 0) {
-                setImgs(res.data);
-            }
-        });
-    }
-    function formData(d: any) {
-        var data = new Date(d)
-        return data.toLocaleDateString('pt-BR')
-    }
-
-    function irParaPost(id: number) {
-        history.push("/post", { idpost: id })
-    }
+export default function Home() {
+    const { user, loading, error: authError } = useAuth();
+    const [posts, setPosts] = useState<FeedPost[]>([]);
+    const [pending, setPending] = useState(true);
+    const [error, setError] = useState('');
 
     useEffect(() => {
-        listar();
-    }, [])
-    return (
-        <>
-            <nav className='nav'> Novo Traço</nav>
-            <div className="home-container">
-                <div id="carouselExampleControls" className="carousel slide" data-ride="carousel">
-                    <div className="carousel-inner">
-                        {posts.map((el, i) => {
-                            return <div className={"carousel-item "+(i==0?"active":'')} key={el.idpost} onClick={() => irParaPost(parseInt(el.idpost))}>
-                                <img src={"http://localhost/novotraco/api/"+el.texto} className="card-img-top" alt="..." />
-                                <div className="carousel-title d-none d-md-block">
-                                    <h2>{el.titulo}</h2>
-                                    <small>{formData(el.datac)}</small>
-                                    {/*<a href="#" className="btn btn-primary">Go somewhere</a>*/}
-                                </div>
-                            </div>
-                        })}                    
-                    </div>
-                    <a className="carousel-control-prev" href="#carouselExampleControls" role="button" data-slide="prev">
-                        <span className="carousel-control-prev-icon" aria-hidden="true"></span>
-                        <span className="sr-only">Previous</span>
-                    </a>
-                    <a className="carousel-control-next" href="#carouselExampleControls" role="button" data-slide="next">
-                        <span className="carousel-control-next-icon" aria-hidden="true"></span>
-                        <span className="sr-only">Next</span>
-                    </a>
-                </div>
-            </div>
-        </>
-    )
-}
+        let mounted = true;
+        api.get<{ posts: FeedPost[] }>('dao.php?action=posts')
+            .then(response => { if (mounted) setPosts(response.data.posts); })
+            .catch(err => { if (mounted) setError(errorMessage(err)); })
+            .finally(() => { if (mounted) setPending(false); });
+        return () => { mounted = false; };
+    }, []);
 
-export default Home;
+    return <main className="page-shell">
+        <section className="feed-intro">
+            <div><span className="eyebrow"><span className="eyebrow-dot" /> UM ESPAÇO PARA COMPARTILHAR</span><h1>Ideias que merecem<br /><em>ser vistas.</em></h1><p>Um mural para compartilhar projetos, imagens e o que inspira você.</p></div>
+            {!loading && !authError && <Link className="button button-dark intro-action" to={user ? '/novoPost' : '/cadastro'}>{user ? 'Criar publicação' : 'Comece a publicar'} <span aria-hidden="true">↗</span></Link>}
+        </section>
+        <section className="feed-container" aria-labelledby="feed-title">
+            <div className="feed-heading"><div><span className="section-kicker">EXPLORE O MURAL</span><h2 id="feed-title">Publicações <span>✳</span></h2></div><span className="feed-count">{pending ? 'CARREGANDO' : `${posts.length} ${posts.length === 1 ? 'POST' : 'POSTS'}`}</span></div>
+            {pending ? <p className="state-message">Carregando publicações...</p>
+                : error ? <p className="state-message error" role="alert">{error}</p>
+                : posts.length === 0 ? <p className="state-message">Ainda não há publicações. Seja a primeira pessoa a compartilhar.</p>
+                : <div className="feed-list">{posts.map(post => <PostCard key={post.id} post={post} />)}</div>}
+        </section>
+        <footer className="site-footer"><span>mural criativo<span className="accent">.</span></span><span>UM ESPAÇO PARA COMPARTILHAR</span></footer>
+    </main>;
+}

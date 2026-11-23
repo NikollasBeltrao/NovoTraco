@@ -11,7 +11,14 @@ class Connection {
          
         try {
             if(!isset($connection)){
-                $connection =  new PDO('mysql:dbname=portifolio;host=localhost', 'root', '');
+                $host = getenv('NOVOTRACO_DB_HOST');
+                $name = getenv('NOVOTRACO_DB_NAME');
+                $user = getenv('NOVOTRACO_DB_USER');
+                $password = getenv('NOVOTRACO_DB_PASSWORD');
+                if (!$host || !$name || !$user || $password === false) {
+                    throw new Exception('Database connection environment variables are not configured.');
+                }
+                $connection = new PDO("mysql:dbname=$name;host=$host;charset=utf8mb4", $user, $password);
                 $connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             }
             return $connection;

@@ -1,117 +1,76 @@
 import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react';
-import "./NovoPost.css";
+import { Link, useHistory } from 'react-router-dom';
 import api from '../api';
-import { useHistory, useLocation } from 'react-router-dom';
-import { FaTrashAlt } from 'react-icons/fa';
+import { errorMessage } from '../auth';
 
+const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
-const NovoPost: React.FC = () => {
-    const location = useLocation();
+export default function NovoPost() {
     const history = useHistory();
-    const [post, setPost] = useState({
-        titulo: '',
-        descricao: ''
-    });
-    const [imgs, setImgs] = useState(Array<any>);
-    var locat: any = location.state;
+    const [titulo, setTitulo] = useState('');
+    const [descricao, setDescricao] = useState('');
+    const [files, setFiles] = useState<File[]>([]);
+    const [previews, setPreviews] = useState<string[]>([]);
+    const [error, setError] = useState('');
+    const [pending, setPending] = useState(false);
 
-    function addImagem(event: ChangeEvent<HTMLInputElement>) {
+    useEffect(() => {
+        const urls = files.map(file => URL.createObjectURL(file));
+        setPreviews(urls);
+        return () => { urls.forEach(url => URL.revokeObjectURL(url)); };
+    }, [files]);
 
-        if (!event.target.files || !event.target.files[0]) return;
-        const FR = new FileReader();
-        var res: any = '';
-        FR.addEventListener("load", (evt) => {
-            if (evt.target) {
-                setImgs([...imgs, evt.target.result?.toString()]);
-            }
-        });
-
-        FR.readAsDataURL(event.target.files[0]);
-    }
-    function removerImagem(index: number) {
-        setImgs(imgs.filter((el, i) => {
-            if (i != index) {
-                return el;
-            }
-        }));
+    function selectImages(event: ChangeEvent<HTMLInputElement>) {
+        const selected = Array.from(event.target.files || []);
+        event.target.value = '';
+        if (files.length + selected.length > 4 || selected.some(file => !allowedTypes.includes(file.type) || file.size > 5 * 1024 * 1024)) {
+            setError('Selecione até 4 imagens JPEG, PNG, GIF ou WebP de até 5 MB cada.');
+            return;
+        }
+        setError('');
+        setFiles(current => [...current, ...selected]);
     }
 
-    async function cadastrar(event: FormEvent<HTMLFormElement>) {
+    async function submit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
-        let form = new FormData();
-        form.append("titulo", post.titulo);
-        form.append("descricao", post.descricao);
-        form.append("idusuario", "1");
-        form.append("imgs", JSON.stringify(imgs));
-        form.append("cadastrarPost", "cadastrarPost");
-        await api.post('/dao.php', form)
-            .then(res => {
-                console.log(res);
-                if (JSON.parse(res.data)) {
-                    if (JSON.parse(res.data)['response'] === true) {
-                        alert("Cadastrado com sucesso!")
-                        setPost({ titulo: '', descricao: '' })
-                        setImgs([])
-                    }
-                    else {
-                        alert("Falha ao cadastrar")
-                    }
-                }
-                else {
-                    alert("Falha ao cadastrar")
-                }
-                console.log(res);
-            }).catch(res => {
-                console.log(res);
-            });
-
+        if (!files.length) {
+            setError('Selecione ao menos uma imagem.');
+            return;
+        }
+        setError('');
+        setPending(true);
+        const form = new FormData();
+        form.append('titulo', titulo);
+        form.append('descricao', descricao);
+        files.forEach(file => form.append('imagens[]', file));
+        try {
+            const response = await api.post<{ id: number }>('dao.php?action=post', form);
+            history.push('/post/' + response.data.id);
+        } catch (err) {
+            setError(errorMessage(err));
+        } finally {
+            setPending(false);
+        }
     }
 
-    function handlerInput(event: ChangeEvent<HTMLInputElement>) {
-        let aux = JSON.parse(JSON.stringify(post));
-        aux[event.target.name] = event.target.value;
-        setPost(aux);
-    }
-    function handlerTextarea(event: ChangeEvent<HTMLTextAreaElement>) {
-        let aux = JSON.parse(JSON.stringify(post));
-        aux[event.target.name] = event.target.value;
-        setPost(aux);
-    }
-
-
-    return (
-        <>
-            <nav className='nav'>Novo Traço</nav>
-            <div className="home-container">
-                <form className='form-cadastrar' onSubmit={cadastrar}>
-                    <div className="mb-12">
-                        <label htmlFor="titulo" className="form-label">Título</label>
-                        <input type="text" className="form-control" id="titulo" name="titulo" value={post.titulo} onChange={handlerInput} />
-                    </div>
-                    <br />
-                    <div className="mb-12">
-                        <label htmlFor="descricao" className="form-label">Descrição</label>
-                        <textarea className="form-control" id="descricao" name="descricao" value={post.descricao} onChange={handlerTextarea} />
-                    </div>
-                    <br />
-                    <div className="mb-12">
-                        <label htmlFor="formFileSm" className="form-label label-file">adicionar imagem</label>
-                        <input type="file" onChange={addImagem} className="form-control" multiple accept='image/*' id="formFileSm" name="img" />
-                    </div>
-                    <button className="btn btn-primary" type='submit'>Cadastrar</button>
-                    <div className="lista-imgs">
-                        {imgs.map((el, i) => {
-                            return <div className="img-content" key={i}>
-                                <img src={el} alt="" />
-                                <button type="button" onClick={() => removerImagem(i)}><FaTrashAlt /></button>
-                            </div>
-                        })}
-                    </div>
-
-                </form>
-            </div>
-        </>
-    )
+    return <main className="form-page">
+        <Link className="back-link" to="/home">← Voltar ao mural</Link>
+        <div className="form-card">
+            <span className="section-kicker">COMPARTILHE UMA IDEIA</span>
+            <h1>Nova publicação.</h1>
+            <p>Adicione imagens e conte um pouco sobre o que você quer mostrar.</p>
+            <form onSubmit={submit}>
+                <label htmlFor="titulo">Título</label>
+                <input id="titulo" value={titulo} onChange={event => setTitulo(event.target.value)} maxLength={100} required />
+                <label htmlFor="descricao">Descrição</label>
+                <textarea id="descricao" value={descricao} onChange={event => setDescricao(event.target.value)} rows={5} required />
+                <label htmlFor="imagens">Imagens</label>
+                <input id="imagens" type="file" accept="image/jpeg,image/png,image/gif,image/webp" multiple onChange={selectImages} />
+                <small className="field-hint">Até 4 imagens, com no máximo 5 MB cada.</small>
+                {previews.length > 0 && <div className="image-previews">{previews.map((url, index) => <div key={url}><img src={url} alt={`Prévia ${index + 1}`} /><button type="button" onClick={() => setFiles(current => current.filter((_, i) => i !== index))} aria-label={`Remover imagem ${index + 1}`}>×</button></div>)}</div>}
+                {error && <p className="form-error" role="alert">{error}</p>}
+                <button className="button button-dark form-submit" type="submit" disabled={pending}>{pending ? 'Publicando...' : 'Publicar'} <span aria-hidden="true">↗</span></button>
+            </form>
+        </div>
+    </main>;
 }
-
-export default NovoPost;

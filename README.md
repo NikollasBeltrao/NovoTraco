@@ -1,46 +1,32 @@
-# Getting Started with Create React App
+# Mural Criativo
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Mural público de publicações com imagens, descrição e autoria. A aplicação
+usa React, PHP e MariaDB. Este ambiente está configurado para demonstração
+local, não para exposição na internet.
 
-## Available Scripts
+Na pasta principal do workspace, execute:
 
-In the project directory, you can run:
+```powershell
+docker compose up -d --build novotraco
+```
 
-### `npm start`
+O mural fica em http://localhost:8185. Qualquer pessoa pode visualizar as
+publicações; para publicar, crie uma conta ou use o acesso local `demo` /
+`demo`. O nome cadastrado identifica o autor e deve ser único. São aceitas
+até quatro imagens JPEG, PNG, GIF ou WebP por publicação, de até 5 MB cada.
+Quando definida, a variável `MURAL_MAX_POSTS` limita o número total de
+publicações; ao atingir o limite, a API informa que o mural está cheio. Sem
+essa variável, não há limite de publicações.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+As publicações e contas ficam no banco `novotraco` do volume
+`amostra-mariadb`. As imagens enviadas ficam em `api/imagens`; preserve
+essa pasta junto com o banco ao fazer backup. O serviço da API adiciona um
+índice único aos nomes de usuário ao iniciar; caso existam nomes duplicados
+em um banco antigo, a inicialização falhará até que sejam resolvidos.
+Senhas antigas são convertidas para hash no próximo login.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+O SQL `docker/novotraco.sql`, na pasta principal, cria os dados de exemplo
+apenas na primeira inicialização do volume. Mudanças nele não sobrescrevem
+um banco existente. A API usa as variáveis `NOVOTRACO_DB_HOST`,
+`NOVOTRACO_DB_NAME`, `NOVOTRACO_DB_USER` e `NOVOTRACO_DB_PASSWORD`,
+configuradas no Compose da pasta principal.

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 800">
+  <rect width="1000" height="800" fill="#f2e3d5"/>
+  <rect x="100" y="105" width="800" height="590" rx="20" fill="#e5c4ad"/>
+  <circle cx="370" cy="400" r="185" fill="#f5eee5"/>
+  <path d="M450 230h225v340H450z" fill="#816f63"/>
+  <path d="M505 282h115v235H505z" fill="#cfaa94"/>
+  <text x="130" y="155" font-family="sans-serif" font-size="21" letter-spacing="5" fill="#846d61">NOS DETALHES</text>
+  <text x="130" y="650" font-family="sans-serif" font-size="18" letter-spacing="4" fill="#846d61">ESTUDO VISUAL / 02</text>
+</svg>

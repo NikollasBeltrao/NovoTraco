@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 800">
+  <rect width="1000" height="800" fill="#e5eadc"/>
+  <rect x="95" y="95" width="810" height="610" rx="18" fill="#f7f5eb"/>
+  <circle cx="500" cy="400" r="220" fill="#bdce9f"/>
+  <path d="M288 500 Q420 200 505 410 T740 340 V580 H288Z" fill="#657f67"/>
+  <circle cx="672" cy="285" r="55" fill="#e9b38e"/>
+  <text x="135" y="150" font-family="sans-serif" font-size="21" letter-spacing="5" fill="#71826e">FORMAS &amp; CORES</text>
+  <text x="135" y="665" font-family="sans-serif" font-size="18" letter-spacing="4" fill="#71826e">ESTUDO VISUAL / 01</text>
+</svg>

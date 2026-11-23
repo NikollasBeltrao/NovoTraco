@@ -1,89 +1,50 @@
-import React, { ChangeEvent, FormEvent, useState } from 'react';
-import './Login.css';
+import React, { FormEvent, useState } from 'react';
+import { Link, useHistory } from 'react-router-dom';
 import api from '../api';
-import load from '../assets/load.gif';
-import { useHistory } from 'react-router-dom';
+import { errorMessage, useAuth, User } from '../auth';
 
-const Login: React.FC = () => {
+export default function Login({ register = false }: { register?: boolean }) {
+    const { setUser } = useAuth();
     const history = useHistory();
-    const [validar, setValidar] = useState(false);
-    const [verSenha, setVerSenha] = useState(false);
-    const [carregando, setCarregando] = useState(false);
-    const [err, setErr] = useState('');
-    const [login, setLogin] = useState({
-        nome: '',
-        senha: ''
-    });
-    async function handlerLogin(event: FormEvent<HTMLFormElement>) {
+    const [nome, setNome] = useState('');
+    const [senha, setSenha] = useState('');
+    const [error, setError] = useState('');
+    const [pending, setPending] = useState(false);
+
+    async function submit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
-        setCarregando(true);
-        let form_data = new FormData();
-        form_data.append('nome', login.nome);
-        form_data.append('senha', login.senha);
-        form_data.append('login', '');
-        setValidar(true);
-        var erraux = '';
-        if (login.senha !== '' && login.nome !== '') {
-            await api.post("/dao.php", form_data).then(res => {
-                if (JSON.parse(res.data)) {
-                    if (JSON.parse(res.data)['response'] === true) {
-                        sessionStorage.clear();
-                        sessionStorage.setItem("login", JSON.stringify(JSON.parse(res.data)['data'][0]));
-                        history.push("/novoPost");
-                    }
-                    else {
-                        erraux = "Falha ao realizar login";
-                    }
-                }
-                setCarregando(false);
-            }).catch(res => {
-                setCarregando(false);
-                erraux = "Falha ao realizar login";
-            });
+        setError('');
+        setPending(true);
+        const form = new FormData();
+        form.append('nome', nome);
+        form.append('senha', senha);
+        try {
+            const response = await api.post<{ user: User }>('dao.php?action=' + (register ? 'register' : 'login'), form);
+            setUser(response.data.user);
+            history.push('/home');
+        } catch (err) {
+            setError(errorMessage(err));
+        } finally {
+            setPending(false);
         }
-        else {
-            erraux = ("Preencha todos os campos")
-        }
-        setErr(erraux);
+    }
 
-    }
-    function handlerCampos(event: ChangeEvent<HTMLInputElement>) {
-        if (event.target.name === 'sen') {
-            setLogin({ ...login, senha: event.target.value });
-        }
-        else {
-            setLogin({ ...login, nome: event.target.value });
-        }
-    }
-    return (
-        <div className="login-container">
-            <form className="needs-validation" onSubmit={handlerLogin}>
-                <h1>LOGIN</h1>
-                <div className="campos form-row">
-                    <div className="form-group col-md-12 ">
-                        <label htmlFor="mat">Nome</label>
-                        <input type="text" name="nome" className="form-control" id="mat" onChange={handlerCampos} value={login.nome} placeholder="Digite seu login" />
-                    </div>
-                    <div className="form-group col-md-12">
-                        <label htmlFor="sen">Senha</label>
-                        <div className="input-group mb-3">
-                            <input type={verSenha ? "text" : "password"} autoComplete="on" aria-describedby="basic-addon2" className="form-control senha-inp" name="sen" id="sen" onChange={handlerCampos} value={login.senha} placeholder="Digite sua senha" />
-                        </div>
-                        {(validar) ? <><small className="inv">{err}</small> <br /> </> : ''}
-                        {carregando ? <><img className="load" src={load} alt="" /><br /> </> : ''}
-                    </div>
-                    <div>
-                        <button type='submit' className="btn btn-primary">Entrar</button>
-                    </div>
-                </div>
-                <div className="leeds-login-container">
-                    <small>Desenvolvido por <small className="leeds-login"> LEEDS</small></small>
-                    <small>V1.0.0</small>
-                </div>
+    return <main className="form-page">
+        <Link className="back-link" to="/home">← Voltar ao mural</Link>
+        <div className="form-card">
+            <span className="section-kicker">{register ? 'FAÇA PARTE' : 'BEM-VINDO DE VOLTA'}</span>
+            <h1>{register ? 'Crie sua conta.' : 'Entre no mural.'}</h1>
+            <p>{register ? 'Um espaço para mostrar suas ideias ao mundo.' : 'Acesse sua conta para compartilhar uma publicação.'}</p>
+            <form onSubmit={submit}>
+                <label htmlFor="nome">Nome</label>
+                <input id="nome" value={nome} onChange={event => setNome(event.target.value)} maxLength={100} autoComplete="username" required />
+                <label htmlFor="senha">Senha</label>
+                <input id="senha" type="password" value={senha} onChange={event => setSenha(event.target.value)} minLength={register ? 6 : undefined} maxLength={72} autoComplete={register ? 'new-password' : 'current-password'} required />
+                {register && <small className="field-hint">Mínimo de 6 caracteres. Seu nome será exibido nas publicações.</small>}
+                {error && <p className="form-error" role="alert">{error}</p>}
+                <button className="button button-dark form-submit" type="submit" disabled={pending}>{pending ? 'Aguarde...' : register ? 'Criar conta' : 'Entrar'} <span aria-hidden="true">↗</span></button>
             </form>
-
+            <p className="form-switch">{register ? 'Já tem uma conta? ' : 'Ainda não tem uma conta? '}<Link to={register ? '/login' : '/cadastro'}>{register ? 'Entre' : 'Cadastre-se'}</Link></p>
         </div>
-    )
+    </main>;
 }
-
-export default Login;

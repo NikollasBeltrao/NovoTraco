@@ -1,41 +1,28 @@
 import React from 'react';
 import { Route, BrowserRouter, Switch, Redirect } from 'react-router-dom';
+import { AuthProvider, useAuth } from './auth';
+import Header from './Components/Header';
 import Login from './Login/Login';
 import Home from './Home/Home';
 import Post from './Post/Post';
 import NovoPost from './NovoPost/NovoPost';
 
-
-interface Props {
-    location: any
-}
-const Page404: React.FC<Props> = (props) => {
-    return (<>404</>)
-}
-
-const PrivateRoute = ({ component, ...rest }: any) => {
-    let user: any = null;
-    let session = sessionStorage.getItem("login");
-    user = (session ? JSON.parse(session) : null);
-    const routeComponent = (props: any) => (
-        user
-            ? React.createElement(component, props)
-            : <Redirect to={{ pathname: '/' }} />
-    );
-    return <Route {...rest} render={routeComponent} />;
-};
-const Routes = () => {
-    return (
-        <BrowserRouter>
-            <Switch>
-                <Route component={Login} exact path="/" />
-                <Route component={Home} path="/home" />
-                <Route component={Post} path="/post" />
-                <PrivateRoute component={NovoPost} path="/novoPost" />
-                <Route component={Page404} />
-            </Switch>
-        </BrowserRouter>
-    );
+function PrivatePost() {
+    const { user, loading, error } = useAuth();
+    if (loading) return <p className="state-message">Carregando sessão...</p>;
+    if (error) return <p className="state-message error">Não foi possível verificar sua sessão.</p>;
+    return user ? <NovoPost /> : <Redirect to="/login" />;
 }
 
-export default Routes;
+export default function Routes() {
+    return <BrowserRouter><AuthProvider><Header /><Switch>
+        <Route exact path="/"><Redirect to="/home" /></Route>
+        <Route exact path="/home" component={Home} />
+        <Route exact path="/login"><Login /></Route>
+        <Route exact path="/cadastro"><Login register /></Route>
+        <Route exact path="/novoPost" component={PrivatePost} />
+        <Route exact path="/post/:id" component={Post} />
+        <Route exact path="/post"><Redirect to="/home" /></Route>
+        <Route><main className="form-page"><h1>Página não encontrada.</h1></main></Route>
+    </Switch></AuthProvider></BrowserRouter>;
+}
